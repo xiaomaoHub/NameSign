@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <!--<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">-->
+    <title>手写签名</title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .white_container {
+            display: none;
+            position: absolute;
+            margin: 0;
+            padding: 0;
+            top: 0%;
+            left: 0%;
+            /*width: 100%;
+            height: 100%;*/
+            /* background-color: lightgray;*/
+            background: rgba(252,253, 254,.95);
+            /*filter: alpha(opacity=50);*/
+            /*z-index: 1001;*/
+            /*opacity: .80;*/
+        }
+
+        .button {
+            width: 300px;
+            height: 150px;
+            padding: 0;
+            margin-left: 100px;
+            color: gray;
+            font-size: 54px;
+            font-weight: bold;
+            line-height: 1.0;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 0.25em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .submit {
+            position: absolute;
+            left: 100%;
+        }
+
+        .close {
+            position: absolute;
+            left: 150%;
+        }
+
+    </style>
+    <script type="text/javascript" charset="utf-8" src="lib/axios/axios.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="lib/html2canvas/html2canvas.js"></script>
+    <script src="https://unpkg.com/vconsole/dist/vconsole.min.js"></script>
+    <script>
+        // VConsole will be exported to `window.VConsole` by default.
+        var vConsole = new window.VConsole();
+    </script>
+
+</head>
+<body>
+    <div id="pdfView">
+        <img id="backGround" class="img-fluid" crossorigin="anonymous" src="../../img/file.jpeg" />
+        <img id="username" style="position:absolute;left:850px;top:3930px;width:600px;height:150px;border: 3px dashed lightgray;font-size:54px; text-align: center;vertical-align:middle;" alt="请输入姓名" onclick="javascript: resizeCanvas();document.getElementById('canvasWindow').style.display='block'" />
+        <img id="industry" style="position:absolute;left:850px;top:4080px;width:600px;height:80px;border: 3px dashed lightgray;font-size:54px; text-align: center;vertical-align: middle;" alt="请输入业态" onclick="javascript: resizeCanvas();document.getElementById('canvasWindow').style.display='block'" />
+        <img id="phone" style="position:absolute;left:850px;top:4170px;width:600px;height:80px;border: 3px dashed lightgray;font-size:54px; text-align: center;vertical-align: middle;" alt="请输入手机号" onclick="javascript: resizeCanvas();document.getElementById('canvasWindow').style.display='block'" />
+    </div>
+    <input type="button" class="button submit" onclick="uploadImageInfo()" value="提交"/>
+    <input type="button" class="button close" onclick="javascript: window.close();" value="关闭页面"/>
+    <div id="canvasWindow" class="white_container">
+        <canvas id="myCanvas" style="border: 3px dashed lightgray"></canvas>
+        <div class="control-ops control">
+            <button type="button" class="button" onclick="javascript: clearArea(); return false;">清空签名</button>
+            <button type="button" class="button" onclick="javascript: saveImageInfo(); return false;">保存</button>
+            <!--<button type="button" class="uploadimg" onclick="javascript: uploadImageInfo(); return false;">上传</button>-->
+            <button type="button" class="button" onclick="document.getElementById('canvasWindow').style.display = 'none';javascript: clearArea(); return false;">关闭</button>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        var mousePressed = false;
+        var lastX, lastY;
+        var ctx = document.getElementById('myCanvas').getContext("2d");
+        var c = document.getElementById('myCanvas');
+        var control = document.getElementsByClassName('control')[0];
+        var saveimgs = document.getElementsByClassName('saveimgs')[0];
+        var imgdom;
+
+        window.onload = function () {
+
+            InitThis();
+        }
+
+        function saveImageInfo() {
+            var image = c.toDataURL("image/png",1.0);
+            imgdom.src = image;
+            imgdom.style.border = 0;
+            document.getElementById('canvasWindow').style.display = 'none';
+            scrollTo(0, document.body.scrollHeight);
+
+        }
+
+        function InitThis() {
+            c.addEventListener('touchstart', function (event) {
+                if (event.targetTouches.length == 1) {
+                    event.preventDefault();
+                    var touch = event.targetTouches[0];
+                    mousePressed = true;
+                    Draw(touch.pageX - this.offsetLeft, touch.pageY - this.offsetTop, false);
+                }
+            }, false);
+
+            c.addEventListener('touchmove', function (event) {
+                if (event.targetTouches.length == 1) {
+                    event.preventDefault();
+                    var touch = event.targetTouches[0];
+                    if (mousePressed) {
+                        Draw(touch.pageX - this.offsetLeft, touch.pageY - this.offsetTop, true);
+                    }
+                }
+            }, false);
+
+            c.addEventListener('touchend', function (event) {
+                if (event.targetTouches.length == 1) {
+                    event.preventDefault();
+                    mousePressed = true;
+                }
+            }, false);
+
+            c.onmousedown = function (event) {
+                mousePressed = true;
+                Draw(event.pageX - this.offsetLeft, event.pageY - this.offsetTop, false);
+            }
+
+            c.onmousemove = function (event) {
+                if (mousePressed) {
+                    Draw(event.pageX - this.offsetLeft, event.pageY - this.offsetTop, true);
+                }
+            }
+
+            c.onmouseup = function (event) {
+                mousePressed = false;
+            }
+
+        }
+
+        function Draw(x, y, isDown) {
+            if (isDown) {
+                ctx.beginPath();
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = "15";
+                ctx.lineJoin = "round";
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.closePath();
+                ctx.stroke();
+            }
+            lastX = x; lastY = y;
+        }
+
+        function clearArea() {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        }
+
+        function dataURItoBlob(dataurl) {   //dataurl是base64格式
+            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
+
+        function uploadImageInfo() {
+            var div = document.getElementById("pdfView");
+
+            //window.pageYoffset = 0;
+            //document.documentElement.scrollTop = 0;
+            //document.body.scrollTop = 0;
+
+            html2canvas(div
+                //, {
+                //    allowTaint: true,
+                //    removeContainer: true,
+                    //height: document.body.scrollHeight,
+                    //windowHeight: document.body.scrollHeight,
+                    //width: document.body.scrollWidth,
+                //    useCORS: true
+                    //scale: 2
+                //}
+            )
+                .then(function (canvas) {
+                    var pageData = canvas.toDataURL('image/jpeg', 0.7);
+                    alert(pageData);
+                    let blob = this.dataURItoBlob(pageData);
+                    let formData = new FormData();
+                    var date = new Date();
+                    var filename = date.getTime() + ".png";;
+                    formData.append("file", blob, filename);
+                    const instance = axios.create();
+                    let config = {
+                        headers: { "Content-Type": "mutipart/form-data" }
+                    }
+                    instance.post('/FileManager/UploadFiles', formData, config).then(res => {
+                        alert("提交成功！");
+                    }).catch(err => {
+                        //false
+                        alert("提交失败，请重试！");
+                    });
+                })
+        }
+
+        function resizeCanvas() {
+            //var div = document.getElementById('canvasWindow');
+            //div.style.top = window.innerHeight;
+            //div.width = window.innerWidth;
+            //div.height = window.innerHeight;
+            scrollTo(0, 0);
+            imgdom = event.target;
+            c.width = window.innerWidth - 20;
+            c.height = window.innerHeight - 160;
+        }
+    </script>
+</body>
+</html>
