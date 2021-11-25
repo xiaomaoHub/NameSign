@@ -56,10 +56,9 @@
             position: absolute;
             left: 150%;
         }
-
     </style>
     <script type="text/javascript" charset="utf-8" src="lib/axios/axios.min.js"></script>
-    <script type="text/javascript" charset="utf-8" src="lib/html2canvas/html2canvas.js"></script>
+    <script src="lib/dom-to-image/dom-to-image.min.js"></script>
     <script src="https://unpkg.com/vconsole/dist/vconsole.min.js"></script>
     <script>
         // VConsole will be exported to `window.VConsole` by default.
@@ -186,25 +185,9 @@
         function uploadImageInfo() {
             var div = document.getElementById("pdfView");
 
-            //window.pageYoffset = 0;
-            //document.documentElement.scrollTop = 0;
-            //document.body.scrollTop = 0;
-
-            html2canvas(div
-                //, {
-                //    allowTaint: true,
-                //    removeContainer: true,
-                    //height: document.body.scrollHeight,
-                    //windowHeight: document.body.scrollHeight,
-                    //width: document.body.scrollWidth,
-                //    useCORS: true
-                    //scale: 2
-                //}
-            )
-                .then(function (canvas) {
-                    var pageData = canvas.toDataURL('image/jpeg', 0.7);
-                    alert(pageData);
-                    let blob = this.dataURItoBlob(pageData);
+            domtoimage.toblob(div, { quality: 1.0 })
+                .then(function (blob) {
+                    alert(blob);
                     let formData = new FormData();
                     var date = new Date();
                     var filename = date.getTime() + ".png";;
@@ -219,7 +202,10 @@
                         //false
                         alert("提交失败，请重试！");
                     });
-                })
+                });
+
+
+           
         }
 
         function resizeCanvas() {
